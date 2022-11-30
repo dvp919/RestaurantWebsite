@@ -7,6 +7,11 @@ const exphbs = require('express-handlebars');
 var database = require('./config/database');
 var bodyParser = require('body-parser');         // pull information from HTML POST (express4)
 
+var lodash = require('lodash');
+
+
+let convert = require('convert-zip-to-gps');
+
 const hostname = process.env.HOST;
 const dbName = process.env.DATABASE;
 
@@ -60,28 +65,51 @@ mongoose.connect(database.url + dbName).then(
 
         app.post('/api/restaurants', function (req, res) {
             // create mongose method to create a new record into collection
+
+            let zip = req.body.zipcode;
+
+            let zip1 = convert.zipConvert(zip)
+
+            var JSONData = zip1.replace('[','').replace(']','').split(',').map(x => x.trim())
+            
+            console.log(JSONData.toString());
+            var y = parseFloat(JSONData[0].toString());
+            var x = parseFloat(JSONData[1].toString());
+
             console.log(req.body);
 
             var data = {
                 address: {
                     building: req.body.building,
-                    coord: req.body.coord,
                     street: req.body.street,
+                    coord:[x,y],
                     zipcode: req.body.zipcode
+                    
                 },
                 borough: req.body.borough,
                 cuisine: req.body.cuisine,
-                grades: req.body.grades,
+                grades: [
+                    {
+                        date: req.body.date,
+                        grade: req.body.grade,
+                        score: req.body.score
+                    }
+                ],
                 name: req.body.name,
                 restaurant_id: req.body.restaurant_id,
             }
+
+
+
             Restaurant.create(data, function (err, restaurant) {
                 if (err)
                     res.send(err);
 
                 res.json(data);
+                //res.render('index', { title: 'Restaurant' , layout:'main.hbs'});
             });
         })
+
 
         // get a restaurants with _id
         app.get('/api/restaurants/:_id', function (req, res) {
@@ -110,7 +138,13 @@ mongoose.connect(database.url + dbName).then(
                 },
                 borough: req.body.borough,
                 cuisine: req.body.cuisine,
-                grades: req.body.grades,
+                grades: [
+                    {
+                        date: req.body.date,
+                        grade: req.body.grade,
+                        score: req.body.score
+                    }
+                ],
                 name: req.body.name,
                 restaurant_id: req.body.restaurant_id,
             }
@@ -134,6 +168,19 @@ mongoose.connect(database.url + dbName).then(
                     res.send('Successfully! Restaurant has been Deleted.');
             });
         });
+
+        app.get('/insertRestaurant', function (req, res) {
+            res.render('insertRestaurant', { title: 'Enter Restaurant Details' , layout:'main.hbs'});
+        });
+
+        app.get('/updateRestaurant', function (req, res) {
+            res.render('updateRestaurant', { title: 'Update Restaurant' , layout:'main.hbs'});
+        });
+
+        app.get('/deleteRestaurant', function (req, res) {
+            res.render('deleteRestaurant', { title: 'Delete Restaurant' , layout:'main.hbs'});
+        });
+
 
         app.listen(port, hostname);
         console.log("App listening on port : " + port);
