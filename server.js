@@ -7,8 +7,6 @@ const exphbs = require('express-handlebars');
 var database = require('./config/database');
 var bodyParser = require('body-parser');         // pull information from HTML POST (express4)
 
-var lodash = require('lodash');
-
 
 let convert = require('convert-zip-to-gps');
 
